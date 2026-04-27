@@ -692,12 +692,20 @@ const obs = new IntersectionObserver(entries=>{
 },{threshold:.08});
 document.querySelectorAll('.reveal,.learn-list li,.for-card').forEach(el=>obs.observe(el));
 
-// ── TRACK LEAD + PURCHASE ON BUTTON CLICK ──
+// ── TRACK LEAD + PURCHASE ON BUTTON CLICK (once per user) ──
+const LS_PX = 'eem26_px_fired';
+function genEventId(){
+  try{ return crypto.randomUUID(); }
+  catch(e){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+}
 document.querySelectorAll('.wa-link').forEach(el=>{
   el.addEventListener('click',function(){
+    if(localStorage.getItem(LS_PX)) return;
     try{
-      fbq('track','Lead');
-      fbq('track','Purchase',{value:0,currency:'NGN'});
+      const eid = genEventId();
+      fbq('track','Lead',    {},{eventID: eid + '_lead'});
+      fbq('track','Purchase',{value:0,currency:'NGN'},{eventID: eid + '_purchase'});
+      localStorage.setItem(LS_PX,'1');
     }catch(e){}
   });
 });
