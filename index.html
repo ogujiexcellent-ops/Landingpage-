@@ -553,13 +553,13 @@ footer{background:#000;text-align:center;padding:18px;font-size:.7rem;color:#333
 
 <script>
 // ── CONFIG ──
-const DEFAULT_LINK = "";
+const DEFAULT_LINK = "https://chat.whatsapp.com/HJ5NCzPMkCI6V2zqPOSUhP";
 const ADMIN_PWD    = "sdda2025";
 const LS_LINK      = "eem26_wa_link";
 const LS_APIKEY    = "eem26_api_key";
 const LS_BINID     = "eem26_bin_id";
-const PRESET_KEY   = "$2a$10$vHyuYzViCczRAed.Te5hpeNYBorRwIi6tPeVwldx50yc4JuH0UVP.";
-const PRESET_BIN   = "69c926a66860e0745b003c27";
+const PRESET_KEY   = "$2a$10$zyFzk2bFFh1ACYLQVHvB6uNT.m/1QUqruHxIgw2Cwb0ZelLBgKoLq";
+const PRESET_BIN   = "6a1df245f5f4af5e29a9eaf6";
 localStorage.setItem(LS_APIKEY, PRESET_KEY);
 localStorage.setItem(LS_BINID,  PRESET_BIN);
 
@@ -653,9 +653,15 @@ async function saveLink(){
         setTimeout(closeAdmin,1800);
         return;
       }
-    } catch(e){}
-    document.getElementById("save-status").textContent = "❌ Cloud save failed";
-    document.getElementById("save-status").style.color = "#ff4444";
+      const errText = await res.text().catch(()=>"");
+      document.getElementById("save-status").textContent = "❌ Cloud error " + res.status + ": " + errText.slice(0,80);
+      document.getElementById("save-status").style.color = "#ff4444";
+      return;
+    } catch(e){
+      document.getElementById("save-status").textContent = "❌ Network error: " + e.message;
+      document.getElementById("save-status").style.color = "#ff4444";
+      return;
+    }
   } else {
     localStorage.setItem(LS_LINK,val);
     setButtons(val);
@@ -692,12 +698,20 @@ const obs = new IntersectionObserver(entries=>{
 },{threshold:.08});
 document.querySelectorAll('.reveal,.learn-list li,.for-card').forEach(el=>obs.observe(el));
 
-// ── TRACK LEAD + PURCHASE ON BUTTON CLICK ──
+// ── TRACK LEAD + PURCHASE ON BUTTON CLICK (once per user) ──
+const LS_PX = 'eem26_px_fired';
+function genEventId(){
+  try{ return crypto.randomUUID(); }
+  catch(e){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+}
 document.querySelectorAll('.wa-link').forEach(el=>{
   el.addEventListener('click',function(){
+    if(localStorage.getItem(LS_PX)) return;
     try{
-      fbq('track','Lead');
-      fbq('track','Purchase',{value:0,currency:'NGN'});
+      const eid = genEventId();
+      fbq('track','Lead',    {},{eventID: eid + '_lead'});
+      fbq('track','Purchase',{value:0,currency:'NGN'},{eventID: eid + '_purchase'});
+      localStorage.setItem(LS_PX,'1');
     }catch(e){}
   });
 });
