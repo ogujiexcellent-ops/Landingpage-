@@ -653,14 +653,15 @@ async function saveLink(){
         setTimeout(closeAdmin,1800);
         return;
       }
-    } catch(e){}
-    // Cloud failed — fall back to local save so the link still updates
-    localStorage.setItem(LS_LINK,val);
-    setButtons(val);
-    document.getElementById("save-status").textContent = "⚠ Cloud sync failed — saved on this device only.";
-    document.getElementById("save-status").style.color = "#F5A623";
-    setTimeout(closeAdmin,2200);
-    return;
+      const errText = await res.text().catch(()=>"");
+      document.getElementById("save-status").textContent = "❌ Cloud error " + res.status + ": " + errText.slice(0,80);
+      document.getElementById("save-status").style.color = "#ff4444";
+      return;
+    } catch(e){
+      document.getElementById("save-status").textContent = "❌ Network error: " + e.message;
+      document.getElementById("save-status").style.color = "#ff4444";
+      return;
+    }
   } else {
     localStorage.setItem(LS_LINK,val);
     setButtons(val);
