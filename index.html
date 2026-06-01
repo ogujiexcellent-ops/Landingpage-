@@ -654,8 +654,13 @@ async function saveLink(){
         return;
       }
     } catch(e){}
-    document.getElementById("save-status").textContent = "❌ Cloud save failed";
-    document.getElementById("save-status").style.color = "#ff4444";
+    // Cloud failed — fall back to local save so the link still updates
+    localStorage.setItem(LS_LINK,val);
+    setButtons(val);
+    document.getElementById("save-status").textContent = "⚠ Cloud sync failed — saved on this device only.";
+    document.getElementById("save-status").style.color = "#F5A623";
+    setTimeout(closeAdmin,2200);
+    return;
   } else {
     localStorage.setItem(LS_LINK,val);
     setButtons(val);
